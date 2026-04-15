@@ -257,6 +257,56 @@
     </div>
 
     <script>
+        // --- ДОБАВЬ ЭТУ СТРОКУ (замени ссылку на ту, что выдал тебе ngrok) ---
+        const BACKEND_URL = "https://chlime-5-228-117-62.ru.tuna.am/rurivpn/api.php"; 
+        
+        function getTrial() {
+            tg.HapticFeedback.impactOccurred('heavy');
+            
+            // Получаем данные пользователя из Телеграма
+            const userId = tg.initDataUnsafe?.user?.id || 0;
+            const userName = tg.initDataUnsafe?.user?.first_name || "Гость";
+        
+            // Показываем юзеру, что идет загрузка (в реальном приложении можно сделать лоадер)
+            tg.showAlert("Отправляем запрос на сервер...");
+        
+            // Отправляем POST запрос на наш PHP-бэкенд
+            fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // Отправляем команду, ID и имя
+                body: JSON.stringify({ 
+                    action: 'get_trial', 
+                    tg_id: userId,
+                    username: userName
+                })
+            })
+            .then(response => response.json()) // Ждем ответ в формате JSON
+            .then(data => {
+                if (data.status === "success") {
+                    // Если PHP ответил успехом, показываем сообщение
+                    tg.showAlert(data.message);
+                    
+                    // Вставляем ключ в интерфейс!
+                    document.querySelector('.key-text').innerText = data.key;
+                    document.querySelector('.key-box').style.opacity = "1";
+                    document.getElementById('userName').nextElementSibling.innerText = "Тестовый период (24ч)";
+                } else {
+                    tg.showAlert("Ошибка: " + data.message);
+                }
+            })
+            .catch(error => {
+                tg.showAlert("Ошибка сети! Бэкенд недоступен.");
+                console.error(error);
+            });
+        }
+        
+        function buyVpn() {
+            tg.HapticFeedback.impactOccurred('medium');
+            tg.showAlert("Эта кнопка скоро тоже будет подключена к API!");
+        }
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.setHeaderColor('#1A0025');
@@ -276,15 +326,7 @@
             element.classList.add('active');
         }
 
-        function buyVpn() {
-            tg.HapticFeedback.impactOccurred('medium');
-            tg.showAlert("Переход к кассе для оплаты 100₽...");
-        }
-
-        function getTrial() {
-            tg.HapticFeedback.impactOccurred('heavy');
-            tg.showAlert("Проверка... Выдаем профиль на 24 часа!");
-        }
+        
 
         tg.ready();
     </script>
